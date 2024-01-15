@@ -1,12 +1,13 @@
+# 1. 데이터베이스
 
-DB(Database)
-   	데이터가 모여있는 기지
+## 1-1. DB(Database)
+        - 데이터가 모여있는 기지
 
-DBMS(Database Management System)
+## 1-2. DBMS(Database Management System)
    	DB를 관리할 수 있는 구체적인 시스템
    	오라클, MySQL, MariaDB, MS-SQL, MongoDB, ...
 
-MySQL
+## 1-3. MySQL
 	웹 사이트와 다양한 애플리케이션에서 사용되는 DBMS이다.
    	오라클은 관리 비용이 고가이지만 MySQL은 저가형 데이터베이스이다.
    	문법이 간결하고 쉬우며, 메모리 사용량이 현저히 낮아서 부담없이 사용 가능하다.
