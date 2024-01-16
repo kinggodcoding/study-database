@@ -275,19 +275,76 @@ show tables;
     요구사항
 
     학사 관리 시스템에 학생과 교수, 과목을 관리합니다.
-    학생은 학번, 이름, 전공 학년이 필요하고
+    학생은 학번, 이름, 전공, 학년이 필요하고
     교수는 교수 번호, 이름, 전공, 직위가 필요합니다.
     과목은 고유한 과목 번호와 과목명, 학점이 필요합니다.
     학생은 여러 과목을 수강할 수 있으며,
     교수는 여러 과목을 강의할 수 있습니다.
     학생이 수강한 과목은 성적(점수)이 모두 기록됩니다.
 */
+    create table tbl_student(
+        id bigint auto_increment primary key,
+        name varchar(255) not null,
+        major varchar(255) not null,
+        grade int default 1
+    );
+
+    create table tbl_professor(
+        id bigint auto_increment primary key,
+        name varchar(255) not null,
+        major varchar(255) not null,
+        position varchar(255) not null
+    );
+
+    create table tbl_subject(
+        id bigint auto_increment primary key,
+        name varchar(255) not null,
+        score int default 0
+    );
+
+    create table tbl_student_subject(
+        id bigint auto_increment primary key,
+        grade varchar(255),
+        status varchar(255) default '수강중',
+        student_id bigint not null,
+        subject_id bigint not null,
+        professor_id bigint not null,
+        constraint check_status check (status in('수강중', '수강완료')),
+        constraint fk_student_subject_student foreign key (student_id)
+                                    references tbl_student(id),
+        constraint fk_student_subject_subject foreign key (subject_id)
+                                    references tbl_subject(id),
+        constraint fk_student_subject_professor foreign key (professor_id)
+                                    references tbl_professor(id)
+    );
+
+    create table tbl_lecture(
+        id bigint auto_increment primary key,
+        professor_id bigint not null,
+        subject_id bigint not null,
+        constraint fk_lecture_professor foreign key(professor_id)
+                            references tbl_professor(id),
+        constraint fk_lecture_subject foreign key(subject_id)
+                            references tbl_subject(id)
+    );
 
 /*
     요구사항
 
     대카테고리, 소카테고리가 필요해요.
 */
+    create table tbl_category_A(
+        id bigint auto_increment primary key,
+        name varchar(255) not null
+    );
+
+    create table tbl_category_B(
+        id bigint auto_increment primary key,
+        name varchar(255) not null,
+        category_A_id bigint not null,
+        constraint fk_category_B_category_A foreign key(category_A_id)
+                               references tbl_category_A(id)
+    );
 
 /*
     요구 사항
@@ -297,6 +354,50 @@ show tables;
     회의실 이용 가능 시간은 파트 타임으로서 여러 시간대가 존재합니다.
 
 */
+create table tbl_user(
+    id varchar(255) primary key,
+    password varchar(255) not null,
+    name varchar(255) not null,
+    address varchar(255) not null,
+    email varchar(255),
+    birth date,
+    level varchar(255) default '기본',
+    constraint check_level check ( level in ('기본', '단골') )
+);
+
+create table tbl_office(
+    id bigint auto_increment primary key,
+    name varchar(255) not null,
+    location varchar(255) not null
+);
+
+create table tbl_conference_room(
+    id bigint auto_increment primary key,
+    office_id bigint not null,
+    constraint fk_conference_room_office foreign key(office_id)
+                                references tbl_office(id)
+);
+
+create table tbl_part_time(
+    id bigint auto_increment primary key,
+    time time not null,
+    conference_room_id bigint not null,
+    constraint fk_part_time_conference_room foreign key(conference_room_id)
+                                references tbl_conference_room(id)
+);
+
+create table tbl_reservation(
+    id bigint auto_increment primary key,
+    time time not null,
+    created_date datetime default (current_timestamp),
+    user_id varchar(255) not null,
+    conference_room_id bigint not null,
+    constraint fk_reservation_user foreign key (user_id)
+                            references tbl_user(id),
+    constraint fk_reservation_conference_room foreign key (conference_room_id)
+                            references tbl_conference_room(id)
+);
+
 
 /*
     요구사항
@@ -306,6 +407,60 @@ show tables;
     체험학습은 체험학습 제목, 체험학습 내용, 이벤트 이미지 여러 장이 필요합니다.
     아이들은 여러 번 체험학습에 등록할 수 있어요.
 */
+create table tbl_parent(
+    id bigint auto_increment primary key,
+    name varchar(255) not null,
+    age tinyint default 1,
+    gender varchar(255) not null,
+    address varchar(255) not null,
+    phone varchar(255) not null,
+    constraint check_gender check ( gender in ('선택안함', '여자', '남자') )
+);
+
+create table tbl_child(
+    id bigint auto_increment primary key,
+    name varchar(255) not null,
+    age tinyint default 1,
+    gender varchar(255) not null,
+    parent_id bigint not null,
+    constraint check_child_gender check ( gender in ('선택안함', '여자', '남자') ),
+    constraint fk_child_parent foreign key (parent_id)
+                      references tbl_parent(id)
+);
+
+create table tbl_field_trip(
+    id bigint auto_increment primary key,
+    title varchar(255) not null,
+    content varchar(255) not null,
+    count tinyint default 0
+);
+
+create table tbl_file(
+    /* 슈퍼키 */
+    id bigint auto_increment primary key,
+    file_path varchar(255) not null,
+    file_name varchar(255) not null
+);
+
+create table tbl_field_trip_file(
+    /* 서브키 */
+    id bigint primary key,
+    field_trip_id bigint not null,
+    constraint fk_field_trip_file_file foreign key (id)
+    references tbl_file(id),
+    constraint fk_field_trip_file_field_trip foreign key (field_trip_id)
+    references tbl_field_trip(id)
+);
+
+create table tbl_apply(
+    id bigint auto_increment primary key,
+    child_id bigint not null,
+    field_trip_id bigint not null,
+    constraint fk_apply_child foreign key (child_id)
+    references tbl_child(id),
+    constraint fk_apply_field_trip foreign key (field_trip_id)
+    references tbl_field_trip(id)
+);
 
 /*
     요구사항
@@ -315,6 +470,63 @@ show tables;
     광고는 제목, 내용이 있고 기업은 여러 광고를 신청할 수 있습니다.
     기업이 광고를 선택할 때에는 카테고리로 선택하며, 대카테고리, 중카테고리, 소카테고리가 있습니다.
 */
+create table tbl_company_type(
+    id bigint auto_increment primary key,
+    type varchar(255)
+);
+
+create table tbl_company(
+    id bigint auto_increment primary key,
+    name varchar(255) not null,
+    address varchar(255) not null,
+    company_type_id bigint,
+    constraint fk_company_company_type foreign key (company_type_id)
+                        references tbl_company_type(id)
+);
+
+create table tbl_ad_category_A(
+    id bigint auto_increment primary key,
+    name varchar(255) not null
+);
+
+create table tbl_ad_category_B(
+    id bigint auto_increment primary key,
+    name varchar(255) not null,
+    ad_category_A_id bigint not null,
+    constraint fk_ad_category_B_ad_category_A foreign key (ad_category_A_id)
+                           references tbl_ad_category_A(id)
+);
+
+create table tbl_ad_category_C(
+    id bigint auto_increment primary key,
+    name varchar(255) not null,
+    ad_category_B_id bigint not null,
+    constraint fk_ad_category_C_ad_category_B foreign key (ad_category_B_id)
+                           references tbl_ad_category_B(id)
+);
+
+
+create table tbl_advertisement(
+    id bigint auto_increment primary key,
+    title varchar(255) not null,
+    content varchar(255) not null,
+    ad_category_C_id bigint not null,
+    constraint fk_advertisement_ad_category_C foreign key (ad_category_C_id)
+                           references tbl_ad_category_C(id)
+);
+
+create table tbl_ad_apply(
+    id bigint auto_increment primary key,
+    company_id bigint not null,
+    advertisement_id bigint not null,
+    created_date datetime default current_timestamp,
+    updated_date datetime default current_timestamp on update current_timestamp,
+    constraint fk_apply_company foreign key (company_id)
+                           references tbl_company(id),
+    constraint fk_apply_advertisement foreign key (advertisement_id)
+                           references tbl_advertisement(id)
+);
+
 
 /*
     요구사항
@@ -323,6 +535,56 @@ show tables;
     음료수의 당첨번호는 1개이고 당첨자의 정보를 알아야 상품을 배송할 수 있습니다.
     당첨 번호마다 당첨 상품이 있고, 당첨 상품이 배송 중인지 배송 완료인지 구분해야 합니다.
 */
+create table tbl_member(
+    id varchar(255) primary key,
+    password varchar(255) not null,
+    name varchar(255) not null,
+    address varchar(255) not null,
+    email varchar(255),
+    birth date
+);
+
+create table tbl_soft_drink(
+    id bigint auto_increment primary key,
+    name varchar(255) not null,
+    price int default 0
+);
+
+create table tbl_product(
+    id bigint auto_increment primary key,
+    name varchar(255) not null
+);
+
+create table tbl_lottery(
+    id bigint auto_increment primary key,
+    number varchar(255) not null,
+    product_id bigint,
+    constraint fk_lottery_product foreign key (product_id)
+                        references tbl_product(id)
+);
+
+create table tbl_circulation(
+    id bigint auto_increment primary key,
+    soft_drink_id bigint not null,
+    lottery_id bigint not null,
+    constraint fk_circulation_soft_drink foreign key (soft_drink_id)
+                            references tbl_soft_drink(id),
+    constraint fk_circulation_lottery foreign key (lottery_id)
+                            references tbl_lottery(id)
+);
+
+create table tbl_delivery(
+    id bigint auto_increment primary key,
+    status varchar(255),
+    member_id varchar(255) not null,
+    product_id bigint not null,
+    constraint check_delivery_status check ( status in ('상품준비중', '배송중', '배송완료') ),
+    constraint fk_delivery_member foreign key (member_id)
+                         references tbl_member(id),
+    constraint fk_delivery_product foreign key (product_id)
+                         references tbl_product(id)
+);
+
 
 /*
     요구사항
@@ -333,9 +595,74 @@ show tables;
     상품의 정보도 필요합니다. 상품의 정보는 이름, 가격, 재고입니다.
     사용자는 등록한 카드의 정보를 저장할 수 있으며, 카드의 정보는 카드번호, 카드사, 회원 정보가 필요합니다.
 */
+create table tbl_corporation(
+    id bigint auto_increment primary key,
+    name varchar(255) not null,
+    address varchar(255) not null,
+    tel varchar(255) not null
+);
 
+create table tbl_client(
+    id varchar(255) primary key,
+    password varchar(255) not null,
+    name varchar(255) not null,
+    address varchar(255) not null,
+    email varchar(255),
+    birth date
+);
 
+create table tbl_card(
+    id bigint auto_increment primary key,
+    number varchar(255) not null,
+    company varchar(255) not null,
+    client_id varchar(255) not null,
+    constraint fk_card_client foreign key (client_id)
+                     references tbl_client(id)
+);
 
+create table tbl_item(
+    id bigint auto_increment primary key,
+    name varchar(255) not null,
+    price int default 0,
+    stock int default 0,
+    corporation_id bigint not null,
+    constraint fk_item_corporation foreign key (corporation_id)
+                     references tbl_corporation(id)
+);
+
+create table tbl_sequence(
+    id bigint auto_increment primary key,
+    sequence bigint default 0
+);
+
+create table tbl_order(
+    id bigint,
+    created_date date default (current_date),
+    primary key (id, created_date)
+);
+
+create table tbl_order_item(
+    id bigint auto_increment primary key,
+    order_id bigint,
+    order_created_date date,
+    item_id bigint,
+    count int default 0,
+    constraint fk_order_item_order foreign key (order_id, order_created_date)
+                              references tbl_order(id, created_date),
+    constraint fk_order_item_product foreign key (item_id)
+                              references tbl_item(id)
+);
+
+create table tbl_pay(
+    id bigint auto_increment primary key,
+    order_id bigint,
+    order_created_date date,
+    card_id bigint,
+    constraint fk_pay_order foreign key (order_id, order_created_date)
+                              references tbl_order(id, created_date),
+    constraint fk_pay_card foreign key (card_id)
+                    references tbl_card(id)
+);
 
 
 
