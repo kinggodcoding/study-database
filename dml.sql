@@ -304,6 +304,8 @@ create table tbl_reply(
                      references tbl_post(id)
 );
 
+
+
 insert into tbl_user (user_id, password, name, address, email, birth)
 values ('hds1234', '1234', '한동석', '경기도', 'test1234@gmail.com', '2000-12-04');
 
@@ -551,14 +553,67 @@ values (5, 4);
 insert into tbl_apply (child_id, field_trip_id)
 values (5, 3);
 
+insert into tbl_apply (child_id, field_trip_id)
+values (4, 5);
+
+
+
 select * from tbl_apply;
 
 /*매미 체험학습에 신청한 아이의 전체 정보*/
 /*1. 서브쿼리만 사용*/
+select * from tbl_child
+where id in
+(
+    select child_id from tbl_apply
+    where field_trip_id in
+        (
+            select id from tbl_field_trip
+            where title like '%매미%'
+        )
+);
+
 /*2. join만 사용*/
+select c.* from tbl_field_trip ft
+join tbl_apply a
+on ft.title like '%매미%' and a.field_trip_id = ft.id
+join tbl_child c
+on a.child_id = c.id;
 
 /*체험학습을 2개 이상 신청한 아이의 정보와 부모의 정보 모두 조회*/
+select * from tbl_parent p join tbl_child c
+on c.id in
+   (select child_id
+    from tbl_apply
+    group by child_id
+    having count(field_trip_id) >= 2) and p.id = c.parent_id;
 
 /*참가자(지원자) 수가 가장 적은 체험학습의 제목과 내용 조회*/
+select * from tbl_field_trip
+where id in (select field_trip_id
+             from tbl_apply
+             group by field_trip_id
+             having count(child_id) = (select min(ac.apply_count)
+                                       from (select field_trip_id, count(child_id) apply_count
+                                             from tbl_apply
+                                             group by field_trip_id) ac));
+
 
 /*평균 참가자(지원자) 수보다 적은 체험학습의 제목과 내용 조회*/
+
+/*total cost: */
+select * from tbl_field_trip
+where id in (
+    select ft.id from tbl_apply a
+    right outer join tbl_field_trip ft
+    on a.field_trip_id = ft.id
+    group by ft.id
+    having count(child_id) < (
+    select floor(avg(ac.apply_count)) from (
+        select field_trip_id, count(child_id) apply_count from tbl_apply
+        group by field_trip_id) ac)
+);
+
+select u.user_id, count(p.id) from tbl_user u left outer join tbl_post p
+on u.id = p.user_id
+group by u.user_id;
