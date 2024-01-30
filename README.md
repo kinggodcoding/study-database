@@ -131,9 +131,9 @@
 
 		3. alter: 테이블 수정
 				- 테이블명 수정
-        				 alter table [테이블명] rename [새로운 테이블명]
+        				alter table [테이블명] rename [새로운 테이블명]
      				 - 컬럼 맨 뒤에 추가
-        				 alter table [테이블명] add [컬럼명] [자료형] [제약조건];
+        				alter table [테이블명] add [컬럼명] [자료형] [제약조건];
       				- 컬럼 맨 앞에 추가
          				alter table [테이블명] add [컬럼명] [자료형] [제약조건] first;
       				- 컬럼 지정 위치에 추가
